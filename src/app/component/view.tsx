@@ -5,7 +5,7 @@ interface ImageViewAreaProps {
 }
 export default function ImageViewArea(props: ImageViewAreaProps) {
   if (!props.daggerImage) {
-    return <div>😎</div>
+    return <div className="p-5">😎</div>
   }
   const image = props.daggerImage
   const tags = image.caption.asTag()
@@ -15,17 +15,19 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
   ))
 
   return (
-    <div className="w-full flex p-2 rounded-xl border border-slate-600 bg-slate-800">
-      <div className="flex p-8 justify-center w-full rounded-xl bg-slate-900 overflow-hidden">
-        <img className="object-contain" src={image.url} alt={image.caption.value} />
+    <div className="w-full h-full flex flex-col p-2 bg-slate-800">
+      <div className="max-h-2/3 flex justify-center overflow-hidden">
+        <img className="object-contain rounded" src={image.url} alt={image.caption.value} />
       </div>
 
-      <div className="h-full flex-col overflow-hidden flex w-2/5 ml-2 gap-2">
+      <input className="mt-6 bg-slate-900 border-slate-950 rounded border p-2 text-sm" placeholder={image.fileName} disabled={true}></input>
+
+      <div className="mt-6 rounded border bg-slate-900 border-slate-950 h-full flex-col overflow-hidden flex gap-2">
         <div className="w-full p-2 rounded-xl bg-slate-900 h-full flex flex-col overflow-y-auto">
           <div className="flex flex-grow h-full flex-wrap content-start">
             {tagElm}
           </div>
-          <div className="bg-slate-700 h-9 rounded-xl overflow-hidden bottom-0">
+          <div className="bg-slate-700 h-9 rounded overflow-hidden bottom-0">
             <input className="bg-slate-700 h-8 pl-4" placeholder="add new tag..." />
           </div>
         </div>
