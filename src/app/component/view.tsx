@@ -11,7 +11,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
   const tags = image.caption.asTag()
 
   const tagElm = tags.map(tag=> (
-    <TagSelector selected={true} tag={tag} key={tag.value()} />
+    <TagSelector selected={true} tag={tag} key={image.realPath + tag.value()} />
   ))
 
   return (
