@@ -2,13 +2,12 @@
  * Although it is technically possible to handle text using Tokenizers, the current focus is primarily on training with tags.
  * Therefore, the implementation will be done in TagMode for now.
  */
-import {getMimeTypeFromFileName, searchCaptionFile} from "@/util/util";
+import {getMimeTypeFromFileName} from "@/util/util";
 import {readBinaryFile} from "@tauri-apps/api/fs";
 
 export class TagStatistics {
     private tag: Tag
     private ct: number
-    private selected: boolean = false
 
     constructor(tag: Tag, count: number) {
         this.tag = tag
@@ -51,9 +50,20 @@ export class Caption {
     public asTag() {
         return this.value.split(",").map(t => new Tag(t.trim()))
     }
+
+    public deleteTag(tag: Tag) {
+        this.value = this.value.split(",").filter(t => t.trim() !== tag.value()).join(",")
+    }
+
+    public addTag(str: string) {
+        // add tag if it doesn't exist
+        if (!this.value.split(",").map(t => t.trim()).includes(str)) {
+            this.value = this.value + ", " + str
+        }
+    }
 }
 
-export class DaggerImage {
+export class DaggerImage implements Exportable {
     public realPath: string;
     public fileName: string = "";
     public blob: Blob | null = null;
@@ -62,10 +72,20 @@ export class DaggerImage {
     public caption = new Caption();
     public isLoaded = false;
 
-    constructor(realPath: string) {
+    constructor(realPath: string, caption: string = "") {
         this.realPath = realPath;
         const parts = realPath.split(/[\\/]/);
         this.fileName = parts[parts.length - 1];
+        this.caption = new Caption(caption);
+    }
+
+    static createWithBlob(blob: Blob, fileName: string, caption: string = ""): DaggerImage {
+        const image = new DaggerImage("");
+        image.blob = blob;
+        image.fileName = fileName;
+        image.caption = new Caption(caption);
+        image.url = URL.createObjectURL(blob);
+        return image;
     }
 
     async asyncLoad() {
@@ -73,15 +93,13 @@ export class DaggerImage {
             return;
         }
 
-        const binary = await readBinaryFile(this.realPath);
-        this.blob = new Blob([binary], {type: getMimeTypeFromFileName(this.fileName)});
-        this.url = URL.createObjectURL(this.blob);
-        const caption = await searchCaptionFile(this.realPath);
-        this.caption = new Caption(caption);
+        if (!this.blob) {
+            const binary = await readBinaryFile(this.realPath);
+            this.blob = new Blob([binary], {type: getMimeTypeFromFileName(this.fileName)});
+            this.url = URL.createObjectURL(this.blob);
+        }
 
-        // After loading the image, create the thumbnail.
         await this.createThumbnail();
-
         this.isLoaded = true;
     }
 
@@ -118,4 +136,34 @@ export class DaggerImage {
             img.src = this.url;
         });
     }
+
+    export(): ExportInfo {
+        const parts = this.fileName.split('.');
+        const ext = parts.length > 1 ? parts[parts.length - 1] : '';
+
+        const name = this.fileName.substring(0, this.fileName.length - ext.length - 1);
+
+        if (!this.blob) {
+            throw new Error('Blob is null');
+        }
+
+        return {
+            imageBlob: this.blob,
+            imageFileName: name,
+            imageExt: ext,
+            caption: this.caption.value,
+        };
+    }
 }
+
+export interface ExportInfo {
+    imageBlob: Blob;
+    imageFileName: string;
+    imageExt: string;
+    caption: string;
+}
+
+export interface Exportable {
+    export(): ExportInfo;
+}
+

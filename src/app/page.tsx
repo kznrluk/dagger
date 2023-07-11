@@ -4,37 +4,52 @@ import {open} from '@tauri-apps/api/dialog';
 import ProjectFile from "@/app/component/project";
 import ImageViewArea from "@/app/component/view";
 import ToolBar from "@/app/component/tool";
-import {DaggerImage, TagStatistics} from "@/domain/data";
+import {DaggerImage, Tag, TagStatistics} from "@/domain/data";
 import TagView from "@/app/component/tag";
 import {useEffect, useState} from "react";
-import {readImageWithCaptionFiles} from "@/util/util";
-import {Simulate} from "react-dom/test-utils";
+import {
+  findCaptionFileByImageName,
+  isCaptionFile,
+  isImageFile,
+  readImageWithCaptionFiles
+} from "@/util/util";
+import {downloadAsZip} from "@/util/zip";
 
 export default function Home() {
-  const [imageList, setImageList] = useState<DaggerImage[]>([])
-  const [currentImage, setCurrentImage] = useState<DaggerImage | null>(null)
+  const [projectImages, setProjectImages] = useState<DaggerImage[]>([])
+  const [currentImages, setCurrentImages] = useState<DaggerImage[]>([])
+  const [selectedImages, setSelectedImages] = useState<DaggerImage[]>([])
   const [projectTags, setProjectTags] = useState<TagStatistics[]>([])
   const [loaded, setLoaded] = useState(0)
-  const [pressingShift, setPressingShift] = useState(false)
+  const [shiftMode, setShiftMode] = useState(false)
+  const [lastClickedImage, setLastClickedImage] = useState<DaggerImage | null>(null)
+  const [ctrlMode, setCtrlMode] = useState(false)
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [ignoreTags, setIgnoreTags] = useState<string[]>([])
-
+  const [changed, setChanged] = useState(false)
 
   const enableTagCloud = true
 
+  window.addEventListener('beforeunload', (event) => {
+    if (changed) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  })
+
   useEffect(() => {
     (async () => {
-      for (const image of imageList) {
+      for (const image of projectImages) {
         await image.asyncLoad()
         setLoaded(prevLoaded => prevLoaded + 1)
       }
     })()
-  }, [imageList])
+  }, [projectImages])
 
   useEffect(() => {
     if (enableTagCloud) {
       const prev: TagStatistics[] = []
-      for (const image of imageList) {
+      for (const image of projectImages) {
         if (!image.isLoaded) {
           continue
         }
@@ -50,46 +65,122 @@ export default function Home() {
         setProjectTags(prev)
       }
     }
-  }, [loaded])
+  }, [loaded, projectImages])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Shift") {
-        setPressingShift(true)
+        if (!lastClickedImage) {
+          setLastClickedImage(selectedImages[selectedImages.length - 1])
+        }
+        setShiftMode(true)
+      }
+      if (e.key === "Control") {
+        setCtrlMode(true)
+      }
+      if (e.key === "a" && ctrlMode) {
+        setSelectedImages(currentImages)
       }
     }
 
     function handleKeyUp(e: KeyboardEvent) {
       if (e.key === "Shift") {
-        setPressingShift(false)
+        setShiftMode(false)
+      }
+      if (e.key === "Control") {
+        setCtrlMode(false)
       }
     }
 
     document.onkeyup = handleKeyUp
     document.onkeydown = handleKeyDown
-  }, [pressingShift])
+
+  }, [shiftMode, ctrlMode, selectedImages])
+
+  useEffect(() => {
+    const anySelectedTags = searchTags.length !== 0 || ignoreTags.length !== 0
+    if (!anySelectedTags) {
+      setCurrentImages(projectImages)
+      return
+    }
+
+    const showImages: DaggerImage[] = []
+    for (const image of projectImages) {
+      const isSearchTarget = searchTags.every(t => image.caption.asTag().find(tag => tag.value() === t))
+      const isIgnoreTarget = ignoreTags.some(t => image.caption.asTag().find(tag => tag.value() === t))
+      const shouldShow = (isSearchTarget && !isIgnoreTarget)
+
+      if (shouldShow) {
+        showImages.push(image)
+      }
+    }
+    setCurrentImages(showImages)
+  }, [searchTags, ignoreTags, projectImages])
 
   function handleOpenDirectory() {
-    open({multiple: true, directory: false})
-      .then(str => {
-        if (!str) {
-          return
-        }
+    setProjectImages([])
 
-        setImageList([])
-        if (Array.isArray(str)) {
-          readImageWithCaptionFiles(str).then(imageList => {
-            setImageList(imageList)
-          })
-        }
-      })
+    // @ts-ignore
+    if (window.__TAURI_IPC__) {
+      open({multiple: true, directory: false})
+        .then(str => {
+          if (!str) return
+          if (Array.isArray(str)) {
+            readImageWithCaptionFiles(str).then(imageList => {
+              setProjectImages(imageList)
+            })
+          }
+        })
+    } else {
+      directoryOpen()
+        .then(async (files) => {
+            const imageFiles = files.filter(f => isImageFile(f.name))
+            const captionFiles = files.filter(f => isCaptionFile(f.name))
+
+            const daggerImages: DaggerImage[] = []
+            for (const imageFile of imageFiles) {
+              const captionFile = findCaptionFileByImageName(imageFile.name, captionFiles)
+              let caption = ""
+              if (captionFile) {
+                caption = await readFileAsText(captionFile)
+              }
+
+              daggerImages.push(DaggerImage.createWithBlob(imageFile, imageFile.name, caption))
+            }
+
+            setProjectImages(daggerImages)
+          }
+        )
+    }
   }
 
-  function handleOpenImage(image: DaggerImage) {
-    setCurrentImage(image)
+  function handleOpenImage(image: DaggerImage|null) {
+    if (!image) {
+      setSelectedImages([])
+      return
+    }
+
+    if (ctrlMode) {
+      if (selectedImages.find(i => i === image)) {
+        setSelectedImages(selectedImages.filter(i => i !== image))
+      } else {
+        setSelectedImages([...selectedImages, image])
+      }
+    } else {
+      setSelectedImages([image])
+    }
+
+    if (lastClickedImage && shiftMode) {
+      const startIndex = projectImages.findIndex(i => i === lastClickedImage)
+      const endIndex = projectImages.findIndex(i => i === image)
+      const newCurrentImages = projectImages.slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1)
+      setSelectedImages(newCurrentImages.filter(i => currentImages.find(s => s === i)))
+    } else {
+      setLastClickedImage(image)
+    }
   }
 
-  function handleTagSelect(tag: TagStatistics| null) {
+  function handleTagSelect(tag: TagStatistics | null) {
     if (tag === null) {
       setSearchTags([])
       setIgnoreTags([])
@@ -108,33 +199,90 @@ export default function Home() {
     }
   }
 
+  function handleDeleteTagFromImage(image: DaggerImage) {
+    return (tag: Tag) => {
+      image.caption.deleteTag(tag)
+      setProjectImages([...projectImages])
+      setChanged(true)
+    }
+  }
+
+  function handleAddTagToImage(image: DaggerImage) {
+    return (tag: string) => {
+      image.caption.addTag(tag)
+      setProjectImages([...projectImages])
+      setChanged(true)
+    }
+  }
+
+  async function handleFileSaveAsZip() {
+    await downloadAsZip(projectImages)
+  }
 
   return (
-    <main className="flex font-mono h-screen min-w-screer text-slate-50">
+    <main className="flex font-mono h-screen min-w-screer text-slate-50 select-none">
       <div className="flex min-h-screen flex-col w-16 p-1 bg-slate-900 border-slate-950 border-r">
-        <ToolBar handleOpenDirectory={handleOpenDirectory}></ToolBar>
+        <ToolBar handleOpenDirectory={handleOpenDirectory} handleSaveAsZip={handleFileSaveAsZip}></ToolBar>
       </div>
       <div
         className="flex  min-h-screen flex-col bg-slate-900 w-full border-r border-slate-950 overflow-x-hidden overflow-y-hidden">
         <div className="h-3/5 overflow-y-auto overflow-x-hidden">
-          <ProjectFile
-            handleOpenImage={handleOpenImage}
-            currentImage={currentImage}
-            images={imageList}
-            searchTags={searchTags}
-            ignoreTags={ignoreTags}
+          <ProjectFile handleOpenImage={handleOpenImage}
+                       selectedImages={selectedImages}
+                       currentImages={currentImages}
+                       images={projectImages}
+                       searchTags={searchTags}
+                       ignoreTags={ignoreTags}
           ></ProjectFile>
         </div>
         <div className="flex h-2/5 overflow-hidden border-t border-slate-950">
-          <TagView tagStatistics={projectTags} searchTags={searchTags} ignoreTags={ignoreTags} handleTagSelect={handleTagSelect}></TagView>
+          <TagView tagStatistics={projectTags} searchTags={searchTags} ignoreTags={ignoreTags}
+                   handleTagSelect={handleTagSelect}></TagView>
         </div>
       </div>
       <div className="flex min-h-screen w-96 flex-col bg-slate-600 overflow-hidden">
         <div className="flex flex-grow p-2 bg-slate-800 overflow-hidden">
-          <ImageViewArea daggerImage={currentImage}></ImageViewArea>
+          <ImageViewArea daggerImages={selectedImages}
+                         handleDeleteTagFromImage={handleDeleteTagFromImage}
+          ></ImageViewArea>
         </div>
       </div>
     </main>
   )
 }
 
+function directoryOpen(): Promise<File[]> {
+  return new Promise((resolve) => {
+    const inputElement = document.createElement('input');
+    inputElement.type = 'file';
+    inputElement.multiple = true;
+
+    inputElement.addEventListener('change', () => {
+      if (!inputElement.files) {
+        resolve([])
+        return
+      }
+
+      let files: File[] = []
+      for (let i = 0; i < inputElement.files.length; i++) {
+        const file = inputElement.files[i];
+        files.push(file)
+      }
+
+      resolve(files)
+    });
+
+    inputElement.click();
+  })
+}
+
+async function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = event => resolve(event.target!.result as string);
+    reader.onerror = error => reject(error);
+
+    reader.readAsText(file);
+  });
+}

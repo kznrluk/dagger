@@ -1,8 +1,9 @@
 import {DaggerImage} from "@/domain/data";
 
 export interface ProjectFileProps {
-  handleOpenImage: (daggerImage: DaggerImage) => void
-  currentImage: DaggerImage | null
+  handleOpenImage: (daggerImage: DaggerImage|null) => void
+  selectedImages: DaggerImage[]
+  currentImages: DaggerImage[]
   searchTags: string[]
   ignoreTags: string[]
 
@@ -11,15 +12,12 @@ export interface ProjectFileProps {
 
 export default function ProjectFile(props: ProjectFileProps) {
   const imageCards = props.images.map((i, n) => {
-    const anySelectedTags = props.searchTags.length !== 0 || props.ignoreTags.length !== 0
-    const isSearchTarget = props.searchTags.every(t => i.caption.asTag().some(t2 => t2.value() === t))
-    const isIgnoreTarget = props.ignoreTags.some(t => i.caption.asTag().some(t2 => t2.value() === t))
-    const shouldShow = !anySelectedTags || (isSearchTarget && !isIgnoreTarget)
+    const shouldShow = props.currentImages.some(c => c.fileName === i.fileName)
 
     return (
       <ImageCard
         img={i}
-        isCurrent={i.url === props.currentImage?.url}
+        isCurrent={props.selectedImages.some(c => c.fileName === i.fileName)}
         handler={props.handleOpenImage}
         key={i.realPath + n}
         visible={shouldShow}
@@ -29,7 +27,7 @@ export default function ProjectFile(props: ProjectFileProps) {
 
   return (
     <div className="flex flex-col select-none w-auto p-5">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3" onMouseDown={() => props.handleOpenImage(null)}>
         {imageCards}
       </div>
     </div>
@@ -66,14 +64,14 @@ export function ImageCard({img, handler, isCurrent, visible}: {
   handler: (img: DaggerImage) => void
   visible: boolean
 }) {
-  const clsBase = "flex flex-col max-w-[256px] overflow-hidden mt-3"
-  const cls = clsBase + (isCurrent ? " bg-slate-700" : " bg-slate-900 hover:bg-slate-800") + (visible ? "" : " hidden")
+  const clsBase = "flex flex-col max-w-[256px] overflow-hidden mt-3 hover:bg-slate-800 shrink-0"
+  const cls = clsBase +  (visible ? "" : " hidden")
 
   const imgCls = isCurrent ? "rounded object-contain border-sky-500 border-2" : "rounded object-contain"
 
   return (
-    <div className={cls} onClick={() => handler(img)}>
-      <div className="flex h-32 justify-center p-1 overflow-hidden">
+    <div className={cls} onMouseDown={(e) => {e.stopPropagation(); handler(img)}}>
+      <div className="flex h-[200px] justify-center p-1 overflow-hidden shrink-0">
         <img className={imgCls} src={img.thumbnailUrl} alt={img.caption.value}></img>
       </div>
       <div className="flex justify-center text-sm pt-2">
