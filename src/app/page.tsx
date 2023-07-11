@@ -24,6 +24,8 @@ export default function Home() {
   const [shiftMode, setShiftMode] = useState(false)
   const [lastClickedImage, setLastClickedImage] = useState<DaggerImage | null>(null)
   const [ctrlMode, setCtrlMode] = useState(false)
+  const [taggingMode, setTaggingMode] = useState(false)
+  const [taggingTags, setTaggingTags] = useState<string[]>([])
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [ignoreTags, setIgnoreTags] = useState<string[]>([])
   const [changed, setChanged] = useState(false)
@@ -199,19 +201,41 @@ export default function Home() {
     }
   }
 
-  function handleDeleteTagFromImage(image: DaggerImage) {
+  function handleDeleteTagFromImage(images: DaggerImage[]) {
     return (tag: Tag) => {
-      image.caption.deleteTag(tag)
+      for (const image of images) {
+        image.caption.deleteTag(tag)
+        setChanged(true)
+      }
+      // this is too slow, we need to update only changed images
+      setProjectImages([...projectImages])
+      // if tag is in searchTags, remove it because it is not in any image
+      if (searchTags.includes(tag.value())) {
+        setSearchTags(searchTags.filter(t => t !== tag.value()))
+      }
+    }
+  }
+
+  function handleAddTagToImage(images: DaggerImage[]) {
+    return (tag: string) => {
+      for (const image of images) {
+        image.caption.addTag(tag)
+      }
       setProjectImages([...projectImages])
       setChanged(true)
     }
   }
 
-  function handleAddTagToImage(image: DaggerImage) {
-    return (tag: string) => {
-      image.caption.addTag(tag)
-      setProjectImages([...projectImages])
-      setChanged(true)
+  function handleToggleTaggingMode(bool: boolean) {
+    setTaggingMode(bool)
+    // toggleFilterMode(!bool)
+  }
+
+  function handleToggleTaggingTags(tag: TagStatistics) {
+    if (taggingTags.includes(tag.value())) {
+      setTaggingTags(taggingTags.filter(t => t !== tag.value()))
+    } else {
+      setTaggingTags([...taggingTags, tag.value()])
     }
   }
 
@@ -233,17 +257,26 @@ export default function Home() {
                        images={projectImages}
                        searchTags={searchTags}
                        ignoreTags={ignoreTags}
-          ></ProjectFile>
+          />
         </div>
         <div className="flex h-2/5 overflow-hidden border-t border-slate-950">
-          <TagView tagStatistics={projectTags} searchTags={searchTags} ignoreTags={ignoreTags}
-                   handleTagSelect={handleTagSelect}></TagView>
+          <TagView tagStatistics={projectTags}
+                   toggleFilterMode={() => setTaggingMode(false)}
+                   handleToggleTaggingTags={handleToggleTaggingTags}
+                   searchTags={searchTags}
+                   ignoreTags={ignoreTags}
+                   handleTagSelect={handleTagSelect}
+                   toggleTaggingMode={handleToggleTaggingMode}
+                   isTaggingMode={taggingMode}
+                   taggingTags={taggingTags}
+          />
         </div>
       </div>
       <div className="flex min-h-screen w-96 flex-col bg-slate-600 overflow-hidden">
         <div className="flex flex-grow p-2 bg-slate-800 overflow-hidden">
           <ImageViewArea daggerImages={selectedImages}
                          handleDeleteTagFromImage={handleDeleteTagFromImage}
+                         handleAddTagToImage={handleAddTagToImage}
           ></ImageViewArea>
         </div>
       </div>

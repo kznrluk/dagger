@@ -1,21 +1,44 @@
 import {DaggerImage, Tag} from "@/domain/data";
 import {DismissRegular} from "@fluentui/react-icons";
+import {useEffect, useState} from "react";
+import {useForm} from "react-hook-form";
 
 interface ImageViewAreaProps {
   daggerImages: DaggerImage[]
-  handleDeleteTagFromImage: (image: DaggerImage) => (tag: Tag) => void
+  handleDeleteTagFromImage: (images: DaggerImage[]) => (tag: Tag) => void
+  handleAddTagToImage: (images: DaggerImage[]) => (tag: string) => void
 }
 
 export default function ImageViewArea(props: ImageViewAreaProps) {
+  const { register, handleSubmit, reset } = useForm();
+
+  // Handle onSubmit event
+  const onSubmit = (data: any) => {
+    if (data.newTag.includes(',')) {
+      alert("Comma is not allowed in tags!");
+      return;
+    }
+
+    props.handleAddTagToImage(images)(data.newTag);
+    reset();
+  };
+
   if (props.daggerImages.length === 0) {
     return <Promotion></Promotion>
   }
   const isSingleImage = props.daggerImages.length === 1
+  const images = props.daggerImages
   const image = props.daggerImages[0]
-  const tags = image.caption.asTag()
+  const tags = isSingleImage ? image.caption.asTag() : props.daggerImages.reduce<Tag[]>((prev, curr): Tag[] => {
+    if (prev.length === 0) {
+      return curr.caption.asTag()
+    }
+
+    return prev.filter(tag => curr.caption.asTag().find(t => t.value() === tag.value()))
+  }, [])
 
   const tagComponents = tags.map((tag, i) => (
-    <TagSelector handleDeleteTagFromImage={props.handleDeleteTagFromImage(image)} selected={true} tag={tag} key={image.realPath + tag.value() + i} />
+    <TagSelector handleDeleteTagFromImage={props.handleDeleteTagFromImage(images)} selected={true} tag={tag} key={image.realPath + tag.value() + i} />
   ))
 
   const imageName = isSingleImage ? image.fileName : `${props.daggerImages.length} images selected`
@@ -29,6 +52,9 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
             const randomDegree = degrees[Math.floor(Math.random() * degrees.length)];
             const translateY = isSingleImage ? [0] : [Math.min(i * 5, 20) - 10];
             const translateX = isSingleImage ? [0] : [Math.min(i * 5, 20) - 10];
+            if (i > 30 && i !== l.length - 1) {
+              return null
+            }
             return (
               <img className={isSingleImage ? "object-contain rounded" : "rounded absolute max-w-[200px] max-h-[200px]"} 
                    style={{transform: `rotate(${randomDegree}deg) translate(${translateY}px, ${translateX}px)`}}
@@ -36,7 +62,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
                    key={image.fileName + i}
               />
             )
-          })
+          }).filter(Boolean)
         }
       </div>
 
@@ -47,9 +73,14 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
           <div className="flex flex-grow h-full flex-wrap content-start">
             {tagComponents}
           </div>
-          <div className="bg-slate-700 h-9 rounded overflow-hidden bottom-0">
-            <input className="bg-slate-700 h-8 pl-4" placeholder="add new tag..." />
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <input
+              {...register("newTag")}
+              className="bg-slate-700 h-9 w-full pl-3"
+              placeholder="add new tag..."
+            />
+            <input type="submit" style={{display: 'none'}} />
+          </form>
         </div>
       </div>
     </div>
@@ -57,14 +88,38 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 }
 
 export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTagFromImage: (tag: Tag) => void }) {
+  const [visible, setVisible] = useState<boolean>(true)
   let className = "flex border border-sky-800 bg-slate-900 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-slate-800"
   if (props.selected) {
     className += " border border-sky-700"
   }
+
+  // TODO: because handleDeleteTagFromImage is too slow, we need to delay the deletion
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (!visible) {
+      timeoutId = setTimeout(() => {
+        props.handleDeleteTagFromImage(props.tag);
+      }, 0);
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }, [visible, props]);
+
+  if (!visible) {
+    className += " hidden"
+  }
+
   return(
     <div className={className}>
       {props.tag.value()}
-      <div onClick={() => props.handleDeleteTagFromImage(props.tag)} className="relative left-1 flex w-5 justify-center items-center text-xs bg-slate-800 rounded-full hover:bg-red-500">
+      <div
+        onClick={() => {
+          setVisible(false)
+        }}
+        className="relative left-1 flex w-5 justify-center items-center text-xs bg-slate-800 rounded-full hover:bg-red-500"
+      >
         <DismissRegular></DismissRegular>
       </div>
     </div>
@@ -74,7 +129,8 @@ export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTa
 export function Promotion() {
   return (
     <div className="flex flex-col items-center justify-center space-y-6 p-10 bg-gradient-to-r w-full text-white rounded-md">
-      <div className="text-3xl font-bold animate-pulse">🗡️ Dagger 🗡️</div>
+      <div className="text-3xl font-bold animate-pulse text-center">Dagger️</div>
+      <div>🗡️</div>
       <div className="text-xl">
         <p>To get started, open an image and its corresponding caption file using the file icon. </p>
         <p>The caption file should have the same name as the image.</p>

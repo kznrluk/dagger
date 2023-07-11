@@ -1,6 +1,5 @@
 import {FolderRegular, SaveRegular} from "@fluentui/react-icons";
 
-
 export default function ToolBar(props: { handleOpenDirectory: () => void, handleSaveAsZip: () => void }) {
   return (
     <div className="flex flex-col items-center flex-grow pt-2 bg-slate-900 text-slate-300">

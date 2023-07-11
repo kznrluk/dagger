@@ -48,7 +48,7 @@ export class Caption {
     }
 
     public asTag() {
-        return this.value.split(",").map(t => new Tag(t.trim()))
+        return this.value.split(",").filter(Boolean).map(t => new Tag(t.trim()))
     }
 
     public deleteTag(tag: Tag) {
