@@ -1,4 +1,5 @@
 import {TagStatistics} from "@/domain/data";
+import {useState} from "react";
 
 interface TagViewProps {
   tagStatistics: TagStatistics[]
@@ -13,8 +14,8 @@ interface TagViewProps {
 }
 
 export default function TagView(props: TagViewProps) {
+  const [tagSearch, setTagSearch] = useState<string>("")
   const filterMode = !props.isTaggingMode
-  const taggingMode = props.isTaggingMode
 
   return (
     <div className="flex flex-col pl-4 w-full pt-2 bg-neutral-800 overflow-hidden select-none">
@@ -28,13 +29,18 @@ export default function TagView(props: TagViewProps) {
           {/*</button>*/}
         </div>
         <div className="pr-4">
+          <input placeholder={"Search"}
+                 className={"bg-neutral-900 border-0 pl-1 rounded w-[256px]"}
+                 onChange={(e) => setTagSearch(e.target.value)}
+                 value={tagSearch}
+          />
         </div>
       </div>
 
       <div className="w-full overflow-y-auto">
         {
           filterMode ?
-            <TagCloud tagStatistics={props.tagStatistics}
+            <TagCloud tagStatistics={props.tagStatistics.filter((t: TagStatistics) => t.value().includes(tagSearch))}
                       ignoreTags={props.ignoreTags}
                       searchTags={props.searchTags}
                       handleTagSelect={props.handleTagSelect}
