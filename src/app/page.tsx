@@ -40,32 +40,35 @@ export default function Home() {
   })
 
   useEffect(() => {
-    (async () => {
-      for (const image of projectImages) {
-        await image.asyncLoad()
-        setLoaded(prevLoaded => prevLoaded + 1)
+    for (const image of projectImages) {
+      if (!image.isLoaded) {
+        image.asyncLoad().then(() => {
+          setLoaded(prevLoaded => prevLoaded + 1)
+        })
       }
-    })()
+    }
   }, [projectImages])
 
   useEffect(() => {
-    if (enableTagCloud) {
-      const prev: TagStatistics[] = []
-      for (const image of projectImages) {
-        if (!image.isLoaded) {
-          continue
-        }
-        for (const tag of image.caption.asTag()) {
-          const tagStat = prev.find(t => t.value() === tag.value())
-          if (tagStat) {
-            tagStat.increment()
-          } else {
-            prev.push(new TagStatistics(tag, 1))
-          }
-        }
-        prev.sort((a, b) => b.count() - a.count())
-        setProjectTags(prev)
+    if (!enableTagCloud || loaded !== projectImages.length) {
+      return
+    }
+
+    const prev: TagStatistics[] = []
+    for (const image of projectImages) {
+      if (!image.isLoaded) {
+        continue
       }
+      for (const tag of image.caption.asTag()) {
+        const tagStat = prev.find(t => t.value() === tag.value())
+        if (tagStat) {
+          tagStat.increment()
+        } else {
+          prev.push(new TagStatistics(tag, 1))
+        }
+      }
+      prev.sort((a, b) => b.count() - a.count())
+      setProjectTags(prev)
     }
   }, [loaded, projectImages])
 
@@ -120,8 +123,6 @@ export default function Home() {
   }, [searchTags, ignoreTags, projectImages])
 
   function handleOpenDirectory() {
-    setProjectImages([])
-
     // @ts-ignore
     if (window.__TAURI_IPC__) {
       open({multiple: true, directory: false})
@@ -136,6 +137,8 @@ export default function Home() {
     } else {
       directoryOpen()
         .then(async (files) => {
+            setProjectImages([])
+            setLoaded(0)
             const imageFiles = files.filter(f => isImageFile(f.name))
             const captionFiles = files.filter(f => isCaptionFile(f.name))
 
@@ -156,7 +159,7 @@ export default function Home() {
     }
   }
 
-  function handleOpenImage(image: DaggerImage|null) {
+  function handleOpenImage(image: DaggerImage | null) {
     if (!image) {
       setSelectedImages([])
       return
@@ -203,18 +206,21 @@ export default function Home() {
 
   function handleDeleteTagFromImage(images: DaggerImage[]) {
     return (tag: Tag) => {
-      for (const image of images) {
-        image.caption.deleteTag(tag)
-        setChanged(true)
-      }
-      // this is too slow, we need to update only changed images
-      setProjectImages([...projectImages])
-      // if tag is in searchTags, remove it because it is not in any image
+      setProjectImages((prev) => {
+        return prev.map(i => {
+          if (images.find(img => img === i)) {
+            i.caption.deleteTag(tag)
+          }
+          return i
+        })
+      })
+
       if (searchTags.includes(tag.value())) {
         setSearchTags(searchTags.filter(t => t !== tag.value()))
       }
     }
   }
+
 
   function handleAddTagToImage(images: DaggerImage[]) {
     return (tag: string) => {
@@ -245,6 +251,12 @@ export default function Home() {
 
   return (
     <main className="flex font-mono h-screen min-w-screer text-slate-50 select-none">
+      <div className={"flex justify-center items-center absolute h-screen w-screen" + (loaded !== projectImages.length ? "" : " hidden")}>
+          <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-slate-800">
+            <p>{loaded} / {projectImages.length}</p>
+            <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
+          </div>
+      </div>
       <div className="flex min-h-screen flex-col w-16 p-1 bg-slate-900 border-slate-950 border-r">
         <ToolBar handleOpenDirectory={handleOpenDirectory} handleSaveAsZip={handleFileSaveAsZip}></ToolBar>
       </div>

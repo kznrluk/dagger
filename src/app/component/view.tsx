@@ -29,15 +29,9 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
   const isSingleImage = props.daggerImages.length === 1
   const images = props.daggerImages
   const image = props.daggerImages[0]
-  const tags = isSingleImage ? image.caption.asTag() : props.daggerImages.reduce<Tag[]>((prev, curr): Tag[] => {
-    if (prev.length === 0) {
-      return curr.caption.asTag()
-    }
+  const commonTags = images.map(i => i.caption.asTag()).reduce((prev, curr) => prev.filter(e => curr.some(f => f.value() === e.value())))
 
-    return prev.filter(tag => curr.caption.asTag().find(t => t.value() === tag.value()))
-  }, [])
-
-  const tagComponents = tags.map((tag, i) => (
+  const tagComponents = commonTags.map((tag, i) => (
     <TagSelector handleDeleteTagFromImage={props.handleDeleteTagFromImage(images)} selected={true} tag={tag} key={image.realPath + tag.value() + i} />
   ))
 
@@ -88,27 +82,9 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 }
 
 export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTagFromImage: (tag: Tag) => void }) {
-  const [visible, setVisible] = useState<boolean>(true)
   let className = "flex border border-sky-800 bg-slate-900 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-slate-800"
   if (props.selected) {
     className += " border border-sky-700"
-  }
-
-  // TODO: because handleDeleteTagFromImage is too slow, we need to delay the deletion
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    if (!visible) {
-      timeoutId = setTimeout(() => {
-        props.handleDeleteTagFromImage(props.tag);
-      }, 0);
-    }
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    }
-  }, [visible, props]);
-
-  if (!visible) {
-    className += " hidden"
   }
 
   return(
@@ -116,7 +92,7 @@ export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTa
       {props.tag.value()}
       <div
         onClick={() => {
-          setVisible(false)
+          props.handleDeleteTagFromImage(props.tag)
         }}
         className="relative left-1 flex w-5 justify-center items-center text-xs bg-slate-800 rounded-full hover:bg-red-500"
       >

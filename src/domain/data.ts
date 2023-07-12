@@ -4,6 +4,7 @@
  */
 import {getMimeTypeFromFileName} from "@/util/util";
 import {readBinaryFile} from "@tauri-apps/api/fs";
+import { v4 as uuidv4 } from 'uuid';
 
 export class TagStatistics {
     private tag: Tag
@@ -48,7 +49,7 @@ export class Caption {
     }
 
     public asTag() {
-        return this.value.split(",").filter(Boolean).map(t => new Tag(t.trim()))
+        return this.value.split(",").map(t => t.trim()).filter(Boolean).map(t => new Tag(t))
     }
 
     public deleteTag(tag: Tag) {
@@ -64,6 +65,7 @@ export class Caption {
 }
 
 export class DaggerImage implements Exportable {
+    public id: string = "";
     public realPath: string;
     public fileName: string = "";
     public blob: Blob | null = null;
@@ -73,6 +75,7 @@ export class DaggerImage implements Exportable {
     public isLoaded = false;
 
     constructor(realPath: string, caption: string = "") {
+        this.id = uuidv4();
         this.realPath = realPath;
         const parts = realPath.split(/[\\/]/);
         this.fileName = parts[parts.length - 1];
@@ -92,6 +95,7 @@ export class DaggerImage implements Exportable {
         if (this.isLoaded) {
             return;
         }
+        this.isLoaded = true;
 
         if (!this.blob) {
             const binary = await readBinaryFile(this.realPath);
@@ -100,7 +104,6 @@ export class DaggerImage implements Exportable {
         }
 
         await this.createThumbnail();
-        this.isLoaded = true;
     }
 
     async createThumbnail() {
