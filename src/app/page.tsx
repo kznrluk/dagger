@@ -146,6 +146,7 @@ export default function Home() {
       directoryOpen()
         .then(async (files) => {
             setProjectImages([])
+            setSelectedImages([])
             setLoaded(0)
             const imageFiles = files.filter(f => isImageFile(f.name))
             const captionFiles = files.filter(f => isCaptionFile(f.name))
@@ -203,12 +204,31 @@ export default function Home() {
     const isIgnoreTag = ignoreTags.find(t => t === tag.value())
 
     if (isSearchTag) {
+      if (shiftMode) {
+        setSearchTags(searchTags.filter(t => t !== tag.value()))
+        return
+      }
       setSearchTags(searchTags.filter(t => t !== tag.value()))
       setIgnoreTags([...ignoreTags, tag.value()])
     } else if (isIgnoreTag) {
       setIgnoreTags(ignoreTags.filter(t => t !== tag.value()))
     } else {
+      if (shiftMode) {
+        setIgnoreTags([...ignoreTags, tag.value()])
+        return
+      }
       setSearchTags([...searchTags, tag.value()])
+    }
+  }
+
+  function handleRemoveTagFromFilter(tag: string) {
+    const isSearchTag = searchTags.find(t => t === tag)
+    const isIgnoreTag = ignoreTags.find(t => t === tag)
+
+    if (isSearchTag) {
+      setSearchTags(searchTags.filter(t => t !== tag))
+    } else if (isIgnoreTag) {
+      setIgnoreTags(ignoreTags.filter(t => t !== tag))
     }
   }
 
@@ -259,11 +279,12 @@ export default function Home() {
 
   return (
     <main className="flex font-mono h-screen min-w-screer text-neutral-50 select-none">
-      <div className={"flex justify-center items-center absolute h-screen w-screen" + (loaded !== projectImages.length ? "" : " hidden")}>
-          <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-neutral-800">
-            <p>{loaded} / {projectImages.length}</p>
-            <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
-          </div>
+      <div
+        className={"flex justify-center items-center absolute h-screen w-screen" + (loaded !== projectImages.length ? "" : " hidden")}>
+        <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-neutral-800">
+          <p>{loaded} / {projectImages.length}</p>
+          <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
+        </div>
       </div>
 
       <div className="flex min-h-screen flex-col w-[48px] p-1 bg-neutral-800 border-neutral-950 border-r">
@@ -300,6 +321,7 @@ export default function Home() {
                            images={projectImages}
                            searchTags={searchTags}
                            ignoreTags={ignoreTags}
+                           handleRemoveTagFromFilter={handleRemoveTagFromFilter}
               />
             </ul>
             <ul className="flex overflow-hidden">
