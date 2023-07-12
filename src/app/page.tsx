@@ -33,12 +33,16 @@ export default function Home() {
 
   const enableTagCloud = true
 
-  window.addEventListener('beforeunload', (event) => {
-    if (changed) {
-      event.preventDefault();
-      event.returnValue = '';
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', (event) => {
+        if (changed) {
+          event.preventDefault();
+          event.returnValue = '';
+        }
+      });
     }
-  })
+  }, [changed]);
 
   useEffect(() => {
     for (const image of projectImages) {
@@ -252,6 +256,7 @@ export default function Home() {
       if (searchTags.includes(tag.value())) {
         setSearchTags(searchTags.filter(t => t !== tag.value()))
       }
+      setChanged(true)
     }
   }
 
