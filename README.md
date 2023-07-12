@@ -1,11 +1,10 @@
 # Dagger - Image Captioning Editor for StableDiffusion
-Dagger is a caption editor that can be used to efficiently tag a large number of images. It supports the tags often used in Stable Diffusion, enabling efficient tagging.
 
-Developed using Tauri, it runs on Windows, macOS, and Linux. Please note that as it's still in development, there may be changes in operation.
+This browser-based web application for Stable Diffusion provides powerful support for WD-style comma-delimited tags. It supports multiple selection tagging and filtering by tags, allowing efficient capture of large numbers of images.
 
-Daggerは大量の画像を効率よくタグ付けするために利用出来るキャプションエディタです。Stable Diffusionでよく利用されているタグに対応し、効率よくタグ付けを行うことが出来ます。
+[Try it out](https://dagger.anyfrog.net)
 
-Tauriを用いて作られているので、Windows, macOS, Linuxで動作します。まだ開発中のソフトウェアのため、動作に変更が加わる可能性があります。
+![image](https://github.com/kznrluk/dagger/assets/29700428/ff2bbfbf-97df-4bd9-9bae-2827b7093f54)
 
 ## LICENSE
 MIT
