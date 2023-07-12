@@ -131,6 +131,12 @@ export default function Home() {
   }, [searchTags, ignoreTags, projectImages])
 
   function handleOpenDirectory() {
+    if (changed) {
+      if (!confirm("Changes are lost when a new folder is opened. Are you sure?")) {
+        return
+      }
+    }
+
     // @ts-ignore
     if (window.__TAURI_IPC__) {
       open({multiple: true, directory: false})
@@ -275,6 +281,7 @@ export default function Home() {
 
   async function handleFileSaveAsZip() {
     await downloadAsZip(projectImages)
+    setChanged(false)
   }
 
   return (
