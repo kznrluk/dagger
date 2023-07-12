@@ -257,9 +257,6 @@ export default function Home() {
         })
       })
 
-      if (searchTags.includes(tag.value())) {
-        setSearchTags(searchTags.filter(t => t !== tag.value()))
-      }
       setChanged(true)
     }
   }
