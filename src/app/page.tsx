@@ -179,6 +179,10 @@ export default function Home() {
   }
 
   function handleOpenImage(image: DaggerImage | null) {
+    if ((shiftMode || ctrlMode) && !image) {
+      return;
+    }
+
     if (!image) {
       setSelectedImages([])
       return
