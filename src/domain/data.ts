@@ -59,6 +59,10 @@ export class Caption {
     public addTag(str: string) {
         // add tag if it doesn't exist
         if (!this.value.split(",").map(t => t.trim()).includes(str)) {
+            if (this.value.trim() === "") {
+                this.value = str
+                return
+            }
             this.value = this.value + ", " + str
         }
     }
