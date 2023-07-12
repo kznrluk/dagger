@@ -14,6 +14,7 @@ import {
   readImageWithCaptionFiles
 } from "@/util/util";
 import {downloadAsZip} from "@/util/zip";
+import Split from "react-split";
 
 export default function Home() {
   const [projectImages, setProjectImages] = useState<DaggerImage[]>([])
@@ -72,6 +73,7 @@ export default function Home() {
     }
   }, [loaded, projectImages])
 
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Shift") {
@@ -84,7 +86,14 @@ export default function Home() {
         setCtrlMode(true)
       }
       if (e.key === "a" && ctrlMode) {
+        e.stopPropagation()
         setSelectedImages(currentImages)
+      }
+      if (e.key === "Enter") {
+        // e.stopPropagation()
+        // if (inputRef.current) {
+        //   inputRef.current.focus()
+        // }
       }
     }
 
@@ -99,7 +108,6 @@ export default function Home() {
 
     document.onkeyup = handleKeyUp
     document.onkeydown = handleKeyDown
-
   }, [shiftMode, ctrlMode, selectedImages])
 
   useEffect(() => {
@@ -257,41 +265,68 @@ export default function Home() {
             <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
           </div>
       </div>
-      <div className="flex min-h-screen flex-col w-16 p-1 bg-slate-900 border-slate-950 border-r">
+
+      <div className="flex min-h-screen flex-col w-[48px] p-1 bg-slate-900 border-slate-950 border-r">
         <ToolBar handleOpenDirectory={handleOpenDirectory} handleSaveAsZip={handleFileSaveAsZip}></ToolBar>
       </div>
-      <div
-        className="flex  min-h-screen flex-col bg-slate-900 w-full border-r border-slate-950 overflow-x-hidden overflow-y-hidden">
-        <div className="h-3/5 overflow-y-auto overflow-x-hidden">
-          <ProjectFile handleOpenImage={handleOpenImage}
-                       selectedImages={selectedImages}
-                       currentImages={currentImages}
-                       images={projectImages}
+
+      <Split
+        className={"flex min-h-screen bg-slate-900 w-full"}
+        direction={"horizontal"}
+        sizes={[80, 20]}
+        gutter={() => {
+          const gutter = document.createElement("div")
+          gutter.className = "h-full w-2 border-l border-slate-900 bg-slate-800 cursor-col-resize"
+          return gutter
+        }}
+        gutterStyle={() => ({})}
+      >
+        <ul>
+          <Split
+            className={"flex h-screen flex-col bg-slate-900 w-full border-r border-slate-950 overflow-x-hidden overflow-y-hidden"}
+            direction={"vertical"}
+            sizes={[75, 35]}
+            gutter={() => {
+              const gutter = document.createElement("div")
+              gutter.className = "w-full h-2 border-b border-slate-950 cursor-row-resize"
+              return gutter
+            }}
+            gutterStyle={() => ({})}
+          >
+            <ul className="overflow-y-auto overflow-x-hidden">
+              <ProjectFile handleOpenImage={handleOpenImage}
+                           selectedImages={selectedImages}
+                           currentImages={currentImages}
+                           images={projectImages}
+                           searchTags={searchTags}
+                           ignoreTags={ignoreTags}
+              />
+            </ul>
+            <ul className="flex overflow-hidden">
+              <TagView tagStatistics={projectTags}
+                       toggleFilterMode={() => setTaggingMode(false)}
+                       handleToggleTaggingTags={handleToggleTaggingTags}
                        searchTags={searchTags}
                        ignoreTags={ignoreTags}
-          />
-        </div>
-        <div className="flex h-2/5 overflow-hidden border-t border-slate-950">
-          <TagView tagStatistics={projectTags}
-                   toggleFilterMode={() => setTaggingMode(false)}
-                   handleToggleTaggingTags={handleToggleTaggingTags}
-                   searchTags={searchTags}
-                   ignoreTags={ignoreTags}
-                   handleTagSelect={handleTagSelect}
-                   toggleTaggingMode={handleToggleTaggingMode}
-                   isTaggingMode={taggingMode}
-                   taggingTags={taggingTags}
-          />
-        </div>
-      </div>
-      <div className="flex min-h-screen w-96 flex-col bg-slate-600 overflow-hidden">
-        <div className="flex flex-grow p-2 bg-slate-800 overflow-hidden">
-          <ImageViewArea daggerImages={selectedImages}
-                         handleDeleteTagFromImage={handleDeleteTagFromImage}
-                         handleAddTagToImage={handleAddTagToImage}
-          ></ImageViewArea>
-        </div>
-      </div>
+                       handleTagSelect={handleTagSelect}
+                       toggleTaggingMode={handleToggleTaggingMode}
+                       isTaggingMode={taggingMode}
+                       taggingTags={taggingTags}
+              />
+            </ul>
+          </Split>
+        </ul>
+        <ul>
+          <div className="flex min-h-screen w-full flex-col bg-slate-600 overflow-hidden">
+            <div className="flex flex-grow p-2 bg-slate-800 overflow-hidden">
+              <ImageViewArea daggerImages={selectedImages}
+                             handleDeleteTagFromImage={handleDeleteTagFromImage}
+                             handleAddTagToImage={handleAddTagToImage}
+              />
+            </div>
+          </div>
+        </ul>
+      </Split>
     </main>
   )
 }

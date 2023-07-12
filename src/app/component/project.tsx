@@ -1,4 +1,6 @@
 import {DaggerImage} from "@/domain/data";
+import {useState} from "react";
+import {ZoomInRegular, ZoomOutRegular} from "@fluentui/react-icons";
 
 export interface ProjectFileProps {
   handleOpenImage: (daggerImage: DaggerImage|null) => void
@@ -11,6 +13,8 @@ export interface ProjectFileProps {
 }
 
 export default function ProjectFile(props: ProjectFileProps) {
+  const [size, setSize] = useState(256)
+
   const imageCards = props.images.map((i, n) => {
     const shouldShow = props.currentImages.some(c => c.fileName === i.fileName)
 
@@ -21,58 +25,42 @@ export default function ProjectFile(props: ProjectFileProps) {
         handler={props.handleOpenImage}
         key={i.realPath + n}
         visible={shouldShow}
+        size={size}
       />
     )
   })
 
   return (
-    <div className="flex flex-col select-none w-auto p-5">
-      <div className="flex flex-wrap gap-3" onMouseDown={() => props.handleOpenImage(null)}>
+    <div className="flex flex-col h-full select-none w-auto overflow-hidden">
+      <div className={"flex justify-end pt-3 pb-3 pr-3 text-2xl"}>
+        <ZoomOutRegular />
+        <input type="range" className="h-[24px] ml-3 mr-3 w-[128px]" min={128} max={512} step={64} value={size} onChange={(v) => setSize(Number(v.target.value))} />
+        <ZoomInRegular />
+      </div>
+      <div className="flex flex-wrap h-full p-5 gap-3 overflow-y-scroll" onMouseDown={() => props.handleOpenImage(null)}>
         {imageCards}
       </div>
     </div>
   )
 }
 
-export function ImageListCard({img, handler, isCurrent, visible}: {
+export function ImageCard({img, handler, isCurrent, visible, size}: {
   img: DaggerImage,
   isCurrent: boolean,
   handler: (img: DaggerImage) => void
   visible: boolean
+  size: number
 }) {
-  const clsBase = "flex flexcontent-center h-16 overflow-hidden"
-
-  const cls = !visible ? "hidden" : clsBase +
-    isCurrent
-    ? "bg-slate-700"
-    : "bg-slate-900 hover:bg-slate-800"
+  let cls = `flex flex-col content-between overflow-hidden mt-3 hover:bg-slate-800 shrink-0`
+  if (!visible) cls += " hidden"
 
   return (
-    <button onClick={() => handler(img)} className={cls}>
-      <div className="flex justify-center w-16 h-32 p-1 overflow-hidden">
-        <img className="w-16 object-center object-cover" src={img.url} alt={img.caption.value}></img>
-      </div>
-      <div className=" overflow-ellipsis text-left text-sm pt-1">
-      </div>
-    </button>
-  )
-}
-
-export function ImageCard({img, handler, isCurrent, visible}: {
-  img: DaggerImage,
-  isCurrent: boolean,
-  handler: (img: DaggerImage) => void
-  visible: boolean
-}) {
-  const clsBase = "flex flex-col max-w-[256px] overflow-hidden mt-3 hover:bg-slate-800 shrink-0"
-  const cls = clsBase +  (visible ? "" : " hidden")
-
-  const imgCls = isCurrent ? "rounded object-contain border-sky-500 border-2" : "rounded object-contain"
-
-  return (
-    <div className={cls} onMouseDown={(e) => {e.stopPropagation(); handler(img)}}>
-      <div className="flex h-[200px] justify-center p-1 overflow-hidden shrink-0">
-        <img className={imgCls} src={img.thumbnailUrl} alt={img.caption.value}></img>
+    <div className={cls} style={{ width: `${size}px`, height: `${size + 40}px` }}
+         onMouseDown={(e) => {e.stopPropagation(); handler(img)}}
+         onDoubleClick={(e) => {e.stopPropagation(); window.open(img.url, '_blank')}}
+    >
+      <div className={`flex justify-center m-1 overflow-hidden shrink-0 items-center ` + (isCurrent ? "border-sky-500 border-2" : "")} style={{ height: `${size}px` }}>
+        <img className={"object-cover"} src={img.thumbnailUrl} alt={img.caption.value}></img>
       </div>
       <div className="flex justify-center text-sm pt-2">
         <p className="overflow-ellipsis max-w-[128px] overflow-hidden whitespace-nowrap">{img.fileName}</p>

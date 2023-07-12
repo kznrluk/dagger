@@ -1,6 +1,5 @@
 import {DaggerImage, Tag} from "@/domain/data";
 import {DismissRegular} from "@fluentui/react-icons";
-import {useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 
 interface ImageViewAreaProps {
@@ -11,16 +10,17 @@ interface ImageViewAreaProps {
 
 export default function ImageViewArea(props: ImageViewAreaProps) {
   const { register, handleSubmit, reset } = useForm();
-
-  // Handle onSubmit event
   const onSubmit = (data: any) => {
-    if (data.newTag.includes(',')) {
-      alert("Comma is not allowed in tags!");
-      return;
-    }
+    console.log(data)
+    if (data.newTag) {
+      if (data.newTag.includes(',')) {
+        alert("Comma is not allowed in tags!");
+        return;
+      }
 
-    props.handleAddTagToImage(images)(data.newTag);
-    reset();
+      props.handleAddTagToImage(images)(data.newTag);
+      reset();
+    }
   };
 
   if (props.daggerImages.length === 0) {
@@ -39,7 +39,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 
   return (
     <div className="w-full h-full flex flex-col p-2 bg-slate-800">
-      <div className={"flex justify-center h-[256px] w-full shrink-0 " + (isSingleImage ? "" : "items-center")}>
+      <div className={"flex justify-center h-[380px] w-full shrink-0 " + (isSingleImage ? "" : "items-center")}>
         {
           props.daggerImages.map((image, i, l) => {
             const degrees = isSingleImage ? [0] : [9];
@@ -50,7 +50,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
               return null
             }
             return (
-              <img className={isSingleImage ? "object-contain rounded" : "rounded absolute max-w-[200px] max-h-[200px]"} 
+              <img className={isSingleImage ? "object-contain" : "rounded absolute max-w-[200px] max-h-[200px]"}
                    style={{transform: `rotate(${randomDegree}deg) translate(${translateY}px, ${translateX}px)`}}
                    src={isSingleImage ? image.url : image.thumbnailUrl} alt={image.caption.value}
                    key={image.fileName + i}
@@ -67,10 +67,10 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
           <div className="flex flex-grow h-full flex-wrap content-start">
             {tagComponents}
           </div>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} className="pt-4">
             <input
               {...register("newTag")}
-              className="bg-slate-700 h-9 w-full pl-3"
+              className="bg-slate-700 rounded h-9 w-full pl-3"
               placeholder="add new tag..."
             />
             <input type="submit" style={{display: 'none'}} />
