@@ -51,7 +51,7 @@ export function ImageCard({img, handler, isCurrent, visible, size}: {
   visible: boolean
   size: number
 }) {
-  let cls = `flex flex-col content-between overflow-hidden mt-3 hover:bg-slate-800 shrink-0`
+  let cls = `flex flex-col content-between overflow-hidden mt-3 hover:bg-neutral-800 shrink-0`
   if (!visible) cls += " hidden"
 
   return (

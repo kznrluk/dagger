@@ -38,7 +38,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
   const imageName = isSingleImage ? image.fileName : `${props.daggerImages.length} images selected`
 
   return (
-    <div className="w-full h-full flex flex-col p-2 bg-slate-800">
+    <div className="w-full h-full flex flex-col p-2 bg-neutral-800">
       <div className={"flex justify-center h-[380px] w-full shrink-0 " + (isSingleImage ? "" : "items-center")}>
         {
           props.daggerImages.map((image, i, l) => {
@@ -60,17 +60,17 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
         }
       </div>
 
-      <input className="mt-6 bg-slate-900 border-slate-950 rounded border p-2 text-sm cursor-text" value={imageName} disabled={true}></input>
+      <input className="mt-6 bg-neutral-900 border-neutral-950 rounded border p-2 text-sm cursor-text overflow-x-auto" value={imageName} disabled={true}></input>
 
-      <div className="mt-6 rounded border bg-slate-900 border-slate-950 h-full flex-col overflow-hidden flex gap-2">
-        <div className="w-full p-2 rounded-xl bg-slate-900 h-full flex flex-col overflow-y-auto">
+      <div className="mt-6 rounded border bg-neutral-900 border-neutral-950 h-full flex-col overflow-hidden flex gap-2">
+        <div className="w-full p-2 rounded-xl bg-neutral-900 h-full flex flex-col overflow-y-auto">
           <div className="flex flex-grow h-full flex-wrap content-start">
             {tagComponents}
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="pt-4">
             <input
               {...register("newTag")}
-              className="bg-slate-700 rounded h-9 w-full pl-3"
+              className="bg-neutral-700 rounded h-9 w-full pl-3"
               placeholder="add new tag..."
             />
             <input type="submit" style={{display: 'none'}} />
@@ -82,7 +82,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 }
 
 export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTagFromImage: (tag: Tag) => void }) {
-  let className = "flex border border-sky-800 bg-slate-900 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-slate-800"
+  let className = "flex border bg-neutral-900 border-neutral-600 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-neutral-800"
   if (props.selected) {
     className += " border border-sky-700"
   }
@@ -94,7 +94,7 @@ export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTa
         onClick={() => {
           props.handleDeleteTagFromImage(props.tag)
         }}
-        className="relative left-1 flex w-5 justify-center items-center text-xs bg-slate-800 rounded-full hover:bg-red-500"
+        className="relative left-1 flex w-5 justify-center items-center text-xs bg-neutral-800 rounded-full hover:bg-red-500"
       >
         <DismissRegular></DismissRegular>
       </div>
@@ -120,8 +120,8 @@ export function Promotion() {
       </div>
       <div className="flex flex-col gap-2 text-center">
         <ShortcutIcon name="CTRL + Click" description="Select multiple" />
-        <ShortcutIcon name="Shift + Click" description="Select in a row" />
-        <ShortcutIcon name="Ctrl + A" description="Select all" />
+        <ShortcutIcon name="SHIFT + Click" description="Select in a row" />
+        <ShortcutIcon name="CTRL + A" description="Select all" />
       </div>
     </div>
   )

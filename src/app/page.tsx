@@ -258,37 +258,37 @@ export default function Home() {
   }
 
   return (
-    <main className="flex font-mono h-screen min-w-screer text-slate-50 select-none">
+    <main className="flex font-mono h-screen min-w-screer text-neutral-50 select-none">
       <div className={"flex justify-center items-center absolute h-screen w-screen" + (loaded !== projectImages.length ? "" : " hidden")}>
-          <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-slate-800">
+          <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-neutral-800">
             <p>{loaded} / {projectImages.length}</p>
             <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
           </div>
       </div>
 
-      <div className="flex min-h-screen flex-col w-[48px] p-1 bg-slate-900 border-slate-950 border-r">
+      <div className="flex min-h-screen flex-col w-[48px] p-1 bg-neutral-800 border-neutral-950 border-r">
         <ToolBar handleOpenDirectory={handleOpenDirectory} handleSaveAsZip={handleFileSaveAsZip}></ToolBar>
       </div>
 
       <Split
-        className={"flex min-h-screen bg-slate-900 w-full"}
+        className={"flex min-h-screen bg-neutral-900 w-full"}
         direction={"horizontal"}
         sizes={[80, 20]}
         gutter={() => {
           const gutter = document.createElement("div")
-          gutter.className = "h-full w-2 border-l border-slate-900 bg-slate-800 cursor-col-resize"
+          gutter.className = "h-full w-2 border-l border-neutral-900 bg-neutral-800 cursor-col-resize"
           return gutter
         }}
         gutterStyle={() => ({})}
       >
         <ul>
           <Split
-            className={"flex h-screen flex-col bg-slate-900 w-full border-r border-slate-950 overflow-x-hidden overflow-y-hidden"}
+            className={"flex h-screen flex-col bg-neutral-900 w-full border-r border-neutral-950 overflow-x-hidden overflow-y-hidden"}
             direction={"vertical"}
             sizes={[75, 35]}
             gutter={() => {
               const gutter = document.createElement("div")
-              gutter.className = "w-full h-2 border-b border-slate-950 cursor-row-resize"
+              gutter.className = "w-full h-2 border-b border-neutral-950 cursor-row-resize"
               return gutter
             }}
             gutterStyle={() => ({})}
@@ -317,13 +317,11 @@ export default function Home() {
           </Split>
         </ul>
         <ul>
-          <div className="flex min-h-screen w-full flex-col bg-slate-600 overflow-hidden">
-            <div className="flex flex-grow p-2 bg-slate-800 overflow-hidden">
-              <ImageViewArea daggerImages={selectedImages}
-                             handleDeleteTagFromImage={handleDeleteTagFromImage}
-                             handleAddTagToImage={handleAddTagToImage}
-              />
-            </div>
+          <div className="flex h-screen w-full flex-col bg-neutral-800 overflow-y-scroll">
+            <ImageViewArea daggerImages={selectedImages}
+                           handleDeleteTagFromImage={handleDeleteTagFromImage}
+                           handleAddTagToImage={handleAddTagToImage}
+            />
           </div>
         </ul>
       </Split>
