@@ -6,11 +6,11 @@ const IMAGE_FILE_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'
 const CAPTION_FILE_EXT = ['.txt', '.caption']
 
 export function isImageFile(path: string): boolean {
-  return IMAGE_FILE_EXT.some(ext => path.endsWith(ext))
+  return IMAGE_FILE_EXT.some(ext => path.endsWith(ext) || path.endsWith(ext.toUpperCase()))
 }
 
 export function isCaptionFile(path: string): boolean {
-  return CAPTION_FILE_EXT.some(ext => path.endsWith(ext))
+  return CAPTION_FILE_EXT.some(ext => path.endsWith(ext) || path.endsWith(ext.toUpperCase()))
 }
 
 export function findCaptionFileByImageName(imageName: string, captionFileNames: File[]): File | undefined {
