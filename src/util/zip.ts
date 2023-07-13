@@ -14,7 +14,7 @@ export async function downloadAsZip(exportables: Exportable[]): Promise<void> {
   const content = await zip.generateAsync({ type: "blob" });
   const url = URL.createObjectURL(content);
 
-  const dateYYMMDDHHMM = new Date().toISOString().replace(/[-:]/g, '').substring(0, 12);
+  const dateYYMMDDHHMM = formatDate(new Date());
 
   const anchor = document.createElement('a');
   anchor.href = url;
@@ -22,4 +22,14 @@ export async function downloadAsZip(exportables: Exportable[]): Promise<void> {
   anchor.click();
 
   URL.revokeObjectURL(url);
+}
+
+
+function formatDate(date: Date) {
+  const y = date.getFullYear();
+  const m = ("00" + (date.getMonth() + 1)).slice(-2);
+  const d = ("00" + date.getDate()).slice(-2);
+  const hh = ("00" + date.getHours()).slice(-2);
+  const mm = ("00" + date.getMinutes()).slice(-2);
+  return '' + y + m + d + hh + mm;
 }
