@@ -132,6 +132,9 @@ export default function Home() {
       }
     }
     setCurrentImages(showImages)
+    if (showImages.length !== 0) {
+      setSelectedImages([showImages[0]])
+    }
   }, [searchTags, ignoreTags, projectImages])
 
   function handleOpenDirectory() {
