@@ -246,16 +246,15 @@ export default function Home() {
     const isIgnoreTag = ignoreTags.find(t => t === tag.value())
 
     if (isSearchTag) {
-      if (shiftMode) {
-        setSearchTags(searchTags.filter(t => t !== tag.value()))
+      setSearchTags(searchTags.filter(t => t !== tag.value()))
+      if (ctrlMode) {
+        setIgnoreTags([...ignoreTags, tag.value()])
         return
       }
-      setSearchTags(searchTags.filter(t => t !== tag.value()))
-      setIgnoreTags([...ignoreTags, tag.value()])
     } else if (isIgnoreTag) {
       setIgnoreTags(ignoreTags.filter(t => t !== tag.value()))
     } else {
-      if (shiftMode) {
+      if (ctrlMode) {
         setIgnoreTags([...ignoreTags, tag.value()])
         return
       }
