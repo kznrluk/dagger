@@ -103,7 +103,6 @@ export class DaggerImage implements Exportable {
         if (this.isLoaded) {
             return;
         }
-        this.isLoaded = true;
 
         if (!this.blob) {
             const binary = await readBinaryFile(this.realPath);
@@ -112,6 +111,7 @@ export class DaggerImage implements Exportable {
         }
 
         await this.createThumbnail();
+        this.isLoaded = true;
     }
 
     async createThumbnail() {

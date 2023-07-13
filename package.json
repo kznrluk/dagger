@@ -25,6 +25,7 @@
     "postcss": "8.4.25",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.45.1",
     "react-image-crop": "^10.1.5",
     "react-rnd": "^10.4.1",

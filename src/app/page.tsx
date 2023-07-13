@@ -7,7 +7,7 @@ import ToolBar from "@/app/component/tool";
 import {DaggerImage, Tag, TagStatistics} from "@/domain/data";
 import 'react-image-crop/dist/ReactCrop.css';
 import TagView from "@/app/component/tag";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {
   findCaptionFileByImageName,
   isCaptionFile,
@@ -17,6 +17,7 @@ import {
 import {downloadAsZip} from "@/util/zip";
 import Split from "react-split";
 import CropViewArea from "@/app/component/crop";
+import {DropEvent, FileRejection, useDropzone} from "react-dropzone";
 
 export default function Home() {
   const [projectImages, setProjectImages] = useState<DaggerImage[]>([])
@@ -33,6 +34,8 @@ export default function Home() {
   const [ignoreTags, setIgnoreTags] = useState<string[]>([])
   const [changed, setChanged] = useState(false)
   const [inCropMode, setInCropMode] = useState<DaggerImage | null>(null)
+  const [lastLoadedImage, setLastLoadedImage] = useState<DaggerImage | null>(null)
+
 
   const enableTagCloud = true
 
@@ -53,17 +56,18 @@ export default function Home() {
 
   useEffect(() => {
     const loadingImages = projectImages.filter(image => !image.isLoaded)
-    const loadedCount = projectImages.length - loadingImages.length
-    console.log(loaded, projectImages.length, loadedCount)
+    const loadedImage = projectImages.filter(image => image.isLoaded)
 
     for (const image of loadingImages) {
       if (!image.isLoaded) {
         image.asyncLoad().then(() => {
-          setLoaded(prevLoaded => prevLoaded + 1)
+          setLastLoadedImage(image)
         })
       }
     }
-  }, [loaded, projectImages])
+
+    setLoaded(() => loadedImage.length)
+  }, [loaded, projectImages, lastLoadedImage])
 
   useEffect(() => {
     if (projectImages.length === 0) {
@@ -156,12 +160,6 @@ export default function Home() {
   }, [searchTags, ignoreTags, projectImages])
 
   function handleOpenDirectory() {
-    if (changed) {
-      if (!confirm("Changes are lost when a new folder is opened. Are you sure?")) {
-        return
-      }
-    }
-
     // @ts-ignore
     if (window.__TAURI_IPC__) {
       open({multiple: true, directory: false})
@@ -176,28 +174,37 @@ export default function Home() {
     } else {
       directoryOpen()
         .then(async (files) => {
-            setProjectImages([])
-            setSelectedImages([])
-            setLoaded(0)
-            const imageFiles = files.filter(f => isImageFile(f.name))
-            const captionFiles = files.filter(f => isCaptionFile(f.name))
-
-            const daggerImages: DaggerImage[] = []
-            for (const imageFile of imageFiles) {
-              const captionFile = findCaptionFileByImageName(imageFile.name, captionFiles)
-              let caption = ""
-              if (captionFile) {
-                caption = await readFileAsText(captionFile)
-              }
-
-              daggerImages.push(DaggerImage.createWithBlob(imageFile, imageFile.name, caption))
-            }
-
-            setProjectImages(daggerImages)
-          }
-        )
+          handleFileOpen(files)
+        })
     }
   }
+
+  async function handleFileOpen(files: File[]) {
+    const imageFiles = files.filter(f => isImageFile(f.name))
+    const captionFiles = files.filter(f => isCaptionFile(f.name))
+    const isFileNameConflict = projectImages.filter(image => imageFiles.some(f => f.name === image.fileName))
+    if (isFileNameConflict.length !== 0) {
+      if (!confirm("Same file name exists in the project. Are you sure to overwrite?")) {
+        return
+      } else {
+        setProjectImages(projectImages.filter(image => !isFileNameConflict.includes(image)))
+      }
+    }
+
+    const daggerImages: DaggerImage[] = []
+    for (const imageFile of imageFiles) {
+      const captionFile = findCaptionFileByImageName(imageFile.name, captionFiles)
+      let caption = ""
+      if (captionFile) {
+        caption = await readFileAsText(captionFile)
+      }
+
+      daggerImages.push(DaggerImage.createWithBlob(imageFile, imageFile.name, caption))
+    }
+
+    setProjectImages(prev => [...prev, ...daggerImages])
+  }
+
 
   function handleOpenImage(image: DaggerImage | null) {
     if ((shiftMode || ctrlMode) && !image) {
@@ -365,6 +372,12 @@ export default function Home() {
     setChanged(true)
   }
 
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    handleFileOpen(acceptedFiles)
+  }, []);
+
+  const {getRootProps, getInputProps} = useDropzone({onDrop, noClick: true});
+
   const overlayBaseCls = "flex justify-center items-center absolute h-screen w-screen bg-neutral-900 bg-opacity-70 z-10 p-10"
   return (
     <main className="flex font-mono h-screen min-w-screer text-neutral-50 select-none">
@@ -414,7 +427,8 @@ export default function Home() {
             }}
             gutterStyle={() => ({})}
           >
-            <ul className="overflow-y-auto overflow-x-hidden">
+            <ul className="overflow-y-auto overflow-x-hidden" {...getRootProps()}>
+              <input {...getInputProps()} />
               <ProjectFile handleOpenImage={handleOpenImage}
                            selectedImages={selectedImages}
                            currentImages={currentImages}
