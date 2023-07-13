@@ -5,6 +5,7 @@ import ProjectFile from "@/app/component/project";
 import ImageViewArea from "@/app/component/view";
 import ToolBar from "@/app/component/tool";
 import {DaggerImage, Tag, TagStatistics} from "@/domain/data";
+import 'react-image-crop/dist/ReactCrop.css';
 import TagView from "@/app/component/tag";
 import {useEffect, useState} from "react";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/util/util";
 import {downloadAsZip} from "@/util/zip";
 import Split from "react-split";
+import CropViewArea from "@/app/component/crop";
 
 export default function Home() {
   const [projectImages, setProjectImages] = useState<DaggerImage[]>([])
@@ -30,6 +32,7 @@ export default function Home() {
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [ignoreTags, setIgnoreTags] = useState<string[]>([])
   const [changed, setChanged] = useState(false)
+  const [inCropMode, setInCropMode] = useState<DaggerImage | null>(null)
 
   const enableTagCloud = true
 
@@ -49,16 +52,24 @@ export default function Home() {
   }, [changed]);
 
   useEffect(() => {
-    for (const image of projectImages) {
+    const loadingImages = projectImages.filter(image => !image.isLoaded)
+    const loadedCount = projectImages.length - loadingImages.length
+    console.log(loaded, projectImages.length, loadedCount)
+
+    for (const image of loadingImages) {
       if (!image.isLoaded) {
         image.asyncLoad().then(() => {
           setLoaded(prevLoaded => prevLoaded + 1)
         })
       }
     }
-  }, [projectImages])
+  }, [loaded, projectImages])
 
   useEffect(() => {
+    if (projectImages.length === 0) {
+      setProjectTags([])
+    }
+
     if (!enableTagCloud || loaded !== projectImages.length) {
       return
     }
@@ -102,6 +113,9 @@ export default function Home() {
         // if (inputRef.current) {
         //   inputRef.current.focus()
         // }
+      }
+      if (e.key === "Delete") {
+        handleDeleteImageFromProject(selectedImages)
       }
     }
 
@@ -314,14 +328,63 @@ export default function Home() {
     setChanged(true)
   }
 
+  function handleSaveCrop(image: DaggerImage, from: DaggerImage, asNew: boolean) {
+    setInCropMode(null)
+    setChanged(true)
+
+    if (asNew) {
+      // insert new image after current image
+      const index = projectImages.findIndex(i => i.fileName === from.fileName)
+      console.log(index)
+      setProjectImages((prev) => {
+        const newImages = [...prev]
+        newImages.splice(index + 1, 0, image)
+        return newImages
+      })
+    } else {
+      // replace current image
+      setProjectImages((prev) => {
+        const newImages = [...prev]
+        const index = prev.findIndex(i => i.fileName === from.fileName)
+        newImages[index] = image
+        return newImages
+      })
+      setLoaded((prev) => prev - 1)
+    }
+
+    setSelectedImages([image])
+  }
+
+  function handleDeleteImageFromProject(images: DaggerImage[]) {
+    if (images.length > 1 && !confirm(`Remove ${images.length} images from project?`)) return
+    setProjectImages((prev) => {
+      return prev.filter(i => images.find(img => img.id === i.id) === undefined)
+    })
+    setLoaded(prevLoaded => prevLoaded - images.length)
+    setSelectedImages([])
+    setChanged(true)
+  }
+
+  const overlayBaseCls = "flex justify-center items-center absolute h-screen w-screen bg-neutral-900 bg-opacity-70 z-10 p-10"
   return (
     <main className="flex font-mono h-screen min-w-screer text-neutral-50 select-none">
       <div
-        className={"flex justify-center items-center absolute h-screen w-screen" + (loaded !== projectImages.length ? "" : " hidden")}>
+        className={overlayBaseCls + (loaded !== projectImages.length ? "" : " hidden")}>
         <div className="flex flex-col w-2/5 h-24 p-6 pt-5 rounded bg-neutral-800">
           <p>{loaded} / {projectImages.length}</p>
           <progress className="w-full h-3 rounded-full mt-2" max={projectImages.length} value={loaded}></progress>
         </div>
+      </div>
+
+      <div className={overlayBaseCls + (inCropMode ? "" : " hidden")}>
+        {
+          inCropMode &&
+            <CropViewArea
+                daggerImage={inCropMode}
+                handleCancelCrop={() => setInCropMode(null)}
+                handleSaveCrop={handleSaveCrop}
+            />
+        }
       </div>
 
       <div className="flex min-h-screen flex-col w-[48px] p-1 bg-neutral-800 border-neutral-950 border-r">
@@ -386,6 +449,8 @@ export default function Home() {
             <ImageViewArea daggerImages={selectedImages}
                            handleDeleteTagFromImage={handleDeleteTagFromImage}
                            handleAddTagToImage={handleAddTagToImage}
+                           setInCropMode={(img) => setInCropMode(img)}
+                           handleDeleteImageFromProject={handleDeleteImageFromProject}
             />
           </div>
         </ul>

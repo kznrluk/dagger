@@ -1,11 +1,13 @@
 import {DaggerImage, Tag} from "@/domain/data";
-import {DismissRegular} from "@fluentui/react-icons";
+import {CropSparkle24Filled, DeleteRegular, DismissRegular} from "@fluentui/react-icons";
 import {useForm} from "react-hook-form";
 
 interface ImageViewAreaProps {
   daggerImages: DaggerImage[]
   handleDeleteTagFromImage: (images: DaggerImage[]) => (tag: Tag) => void
+  handleDeleteImageFromProject: (images: DaggerImage[]) => void
   handleAddTagToImage: (images: DaggerImage[]) => (tag: string) => void
+  setInCropMode: (img: DaggerImage) => void
 }
 
 export default function ImageViewArea(props: ImageViewAreaProps) {
@@ -60,10 +62,24 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
         }
       </div>
 
-      <input className="mt-6 bg-neutral-900 border-neutral-950 rounded border p-2 text-sm cursor-text overflow-x-auto" value={imageName} disabled={true}></input>
+      <div className="flex justify-center mt-4 gap-3">
+        {
+          isSingleImage ?
+            <div onClick={() => { props.setInCropMode(image) }} className="flex justify-center items-center text-3xl rounded-full bg-neutral-900 border-neutral-950 border hover:bg-neutral-800 cursor-pointer w-[80px] h-[40px]">
+              <CropSparkle24Filled />
+            </div>
+            :
+            <></>
+        }
+        <div onClick={() => { props.handleDeleteImageFromProject(images) }} className="flex justify-center items-center text-3xl rounded-full bg-neutral-900 border-neutral-950 border hover:bg-neutral-800 cursor-pointer w-[80px] h-[40px]">
+          <DeleteRegular />
+        </div>
+      </div>
 
-      <div className="mt-6 rounded border bg-neutral-900 border-neutral-950 h-full flex-col overflow-hidden flex gap-2">
-        <div className="w-full p-2 rounded-xl bg-neutral-900 h-full flex flex-col overflow-y-auto">
+      <input className="mt-4 bg-neutral-900 border-neutral-950 rounded border p-2 text-sm cursor-text overflow-x-auto" value={imageName} disabled={true}></input>
+
+      <div className="mt-4 rounded border bg-neutral-900 border-neutral-950 h-full flex-col overflow-hidden flex gap-2">
+        <div className="w-full p-2 rounded-xl h-full flex flex-col overflow-y-auto select-text">
           <div className="flex flex-grow h-full flex-wrap content-start">
             {tagComponents}
           </div>
@@ -82,7 +98,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 }
 
 export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTagFromImage: (tag: Tag) => void }) {
-  let className = "flex border bg-neutral-900 border-neutral-600 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-neutral-800"
+  let className = "flex border bg-neutral-900 border-neutral-600 rounded-2xl p-1 pl-2 pr-2 m-1 text-sm"
   if (props.selected) {
     className += " "
   }
@@ -94,7 +110,7 @@ export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTa
         onClick={() => {
           props.handleDeleteTagFromImage(props.tag)
         }}
-        className="relative left-1 flex w-5 justify-center items-center text-xs bg-neutral-800 rounded-full hover:bg-red-500"
+        className="relative left-1 flex w-5 justify-center items-center text-xs bg-neutral-800 rounded-full cursor-pointer hover:bg-red-500"
       >
         <DismissRegular></DismissRegular>
       </div>
