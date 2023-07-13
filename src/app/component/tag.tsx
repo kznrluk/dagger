@@ -1,5 +1,6 @@
 import {TagStatistics} from "@/domain/data";
 import {useState} from "react";
+import {DismissRegular} from "@fluentui/react-icons";
 
 interface TagViewProps {
   tagStatistics: TagStatistics[]
@@ -7,6 +8,8 @@ interface TagViewProps {
   toggleTaggingMode: (bool: boolean) => void,
   toggleFilterMode: (bool: boolean) => void,
   handleToggleTaggingTags: (tag: TagStatistics) => void,
+  ctrlMode: boolean,
+  handleDeleteTagFromProject: (tag: TagStatistics) => void,
   isTaggingMode: boolean,
   taggingTags: string[]
   searchTags: string[]
@@ -44,6 +47,8 @@ export default function TagView(props: TagViewProps) {
                       ignoreTags={props.ignoreTags}
                       searchTags={props.searchTags}
                       handleTagSelect={props.handleTagSelect}
+                      ctrlMode={props.ctrlMode}
+                      handleDeleteTagFromProject={props.handleDeleteTagFromProject}
             />
             :
             <></>
@@ -68,6 +73,8 @@ interface TagCloudProps {
   handleTagSelect: (tag: TagStatistics | null) => void,
   searchTags: string[]
   ignoreTags: string[]
+  ctrlMode: boolean
+  handleDeleteTagFromProject: (tag: TagStatistics) => void,
 }
 
 function TagCloud(props: TagCloudProps) {
@@ -84,19 +91,25 @@ function TagCloud(props: TagCloudProps) {
       clsName += "bg-neutral-900 border-neutral-600"
     }
 
+    const tagControlBaseCls = "relative left-1 flex w-8 justify-center items-center text-xs bg-neutral-800 rounded-full"
+    const tagCountOrDeleteButton = !props.ctrlMode ?
+      <div className={tagControlBaseCls}>{t.count()}</div> :
+      <div onClick={(e) => {e.stopPropagation(); props.handleDeleteTagFromProject(t)}}
+           className={tagControlBaseCls + " cursor-pointer hover:bg-red-500"}
+      >
+        <DismissRegular></DismissRegular>
+      </div>
+
+
     return (
-      <div
-        className={clsName}
-        key={t.value()}
+      <div className={clsName} key={t.value()}
         onClick={(e) => {
           e.stopPropagation()
           props.handleTagSelect(t)
         }}
       >
         {t.value()}
-        <div className="relative left-1 flex w-8 justify-center items-center text-xs bg-neutral-800 rounded-full">
-          {t.count()}
-        </div>
+        {tagCountOrDeleteButton}
       </div>
     )
   })

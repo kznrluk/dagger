@@ -40,7 +40,11 @@ export default function Home() {
           event.preventDefault();
           event.returnValue = '';
         }
-      });
+      })
+      window.addEventListener('blur', () => {
+        setCtrlMode(false)
+        setShiftMode(false)
+      })
     }
   }, [changed]);
 
@@ -293,6 +297,23 @@ export default function Home() {
     setChanged(false)
   }
 
+  function handleDeleteTagFromProject(tag: TagStatistics) {
+    if (tag.count() >= 2) {
+      if (!confirm(`Delete tag ` + `"${tag.value()}" from ${tag.count()} images ?`)) {
+        return
+      }
+    }
+
+    setProjectImages((prev) => {
+      return prev.map(i => {
+        i.caption.deleteTag(tag.getTag())
+        return i
+      })
+    })
+    setSearchTags(searchTags.filter(t => t !== tag.value()))
+    setChanged(true)
+  }
+
   return (
     <main className="flex font-mono h-screen min-w-screer text-neutral-50 select-none">
       <div
@@ -337,6 +358,10 @@ export default function Home() {
                            images={projectImages}
                            searchTags={searchTags}
                            ignoreTags={ignoreTags}
+                           shiftMode={shiftMode}
+                           ctrlMode={ctrlMode}
+                           setCtrlMode={setCtrlMode}
+                           setShiftMode={setShiftMode}
                            handleRemoveTagFromFilter={handleRemoveTagFromFilter}
               />
             </ul>
@@ -346,10 +371,12 @@ export default function Home() {
                        handleToggleTaggingTags={handleToggleTaggingTags}
                        searchTags={searchTags}
                        ignoreTags={ignoreTags}
+                       ctrlMode={ctrlMode}
                        handleTagSelect={handleTagSelect}
                        toggleTaggingMode={handleToggleTaggingMode}
                        isTaggingMode={taggingMode}
                        taggingTags={taggingTags}
+                       handleDeleteTagFromProject={handleDeleteTagFromProject}
               />
             </ul>
           </Split>

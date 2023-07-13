@@ -7,7 +7,7 @@ import {readBinaryFile} from "@tauri-apps/api/fs";
 import { v4 as uuidv4 } from 'uuid';
 
 export class TagStatistics {
-    private tag: Tag
+    private readonly tag: Tag
     private ct: number
 
     constructor(tag: Tag, count: number) {
@@ -29,6 +29,10 @@ export class TagStatistics {
 
     value() {
         return this.tag.value()
+    }
+
+    getTag() {
+        return this.tag
     }
 }
 

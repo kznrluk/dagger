@@ -84,7 +84,7 @@ export default function ImageViewArea(props: ImageViewAreaProps) {
 export function TagSelector(props: { tag: Tag, selected: boolean, handleDeleteTagFromImage: (tag: Tag) => void }) {
   let className = "flex border bg-neutral-900 border-neutral-600 rounded-2xl p-1 pl-2 pr-2 m-1 select-none text-sm cursor-pointer hover:bg-neutral-800"
   if (props.selected) {
-    className += " border border-sky-700"
+    className += " "
   }
 
   return(
