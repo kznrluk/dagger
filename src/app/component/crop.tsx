@@ -42,7 +42,7 @@ export default function CropViewArea(props: CropViewAreaProps) {
   return (
     <div className="flex flex-col justify-between w-3/5 h-4/5 p-6 pt-5 rounded bg-neutral-700">
       <div className="flex justify-center items-center h-full w-full p-2 bg-neutral-950 rounded overflow-auto">
-        <div className="max-w-[800px]">
+        <div className="max-w-[800px] max-h-full">
           <ReactCrop crop={crop} onChange={setCrop}>
             <img src={daggerImage.url} ref={cropImageRef} alt={daggerImage.caption.value}/>
           </ReactCrop>
