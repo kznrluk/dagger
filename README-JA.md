@@ -11,6 +11,9 @@ DaggerはStable Diffusionでよく利用されるカンマ区切りキャプシ�
 ## 使い方
 Daggerは画像ファイルと、画像ファイルと同名のキャプションファイルを1ペアとして扱います。
 
+![image](https://github.com/kznrluk/dagger/assets/29700428/98f60636-7e92-4cfa-b856-1d64a0feae0e)
+
+
 ### 0. 事前準備
 DaggerはWD14-Taggerの出力ファイルと互換性があります。必要に応じて事前にタグ付けを行うことが出来ます。
 
