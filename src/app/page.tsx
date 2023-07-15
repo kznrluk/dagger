@@ -458,7 +458,7 @@ export default function Home() {
           </Split>
         </ul>
         <ul>
-          <div className="flex h-screen w-full flex-col bg-neutral-800 overflow-y-scroll">
+          <div className="flex h-screen w-full flex-col bg-neutral-800 overflow-y-auto">
             <ImageViewArea daggerImages={selectedImages}
                            handleDeleteTagFromImage={handleDeleteTagFromImage}
                            handleAddTagToImage={handleAddTagToImage}

@@ -70,7 +70,7 @@ export default function ProjectFile(props: ProjectFileProps) {
           <ZoomInRegular/>
         </div>
       </div>
-      <div className="flex flex-wrap h-full p-5 pt-0 gap-3 overflow-y-scroll"
+      <div className="flex flex-wrap h-full p-5 pt-0 gap-3 overflow-y-auto"
            onMouseDown={() => props.handleOpenImage(null)}>
         {imageCards}
       </div>
