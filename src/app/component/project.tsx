@@ -152,7 +152,7 @@ export function ImageCard({img, handler, isCurrent, visible, size}: {
       <div
         className={`flex justify-center m-1 overflow-hidden shrink-0 items-center ` + (isCurrent ? "border-sky-500 border-2" : "")}
         style={{height: `${size}px`}}>
-        <img className={"object-cover"} src={img.thumbnailUrl} alt={img.caption.value}></img>
+        <img className={"object-cover pointer-events-none"} onDragStart={(e) => e.stopPropagation()} src={img.thumbnailUrl} alt={img.caption.value}></img>
       </div>
       <div className="flex justify-center text-sm pt-2">
         <p className="overflow-ellipsis max-w-[128px] overflow-hidden whitespace-nowrap">{img.fileName}</p>
