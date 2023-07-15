@@ -33,7 +33,7 @@ export default function TagView(props: TagViewProps) {
         </div>
         <div className="pr-4">
           <input placeholder={"Search"}
-                 className={"bg-neutral-900 border-0 pl-1 rounded w-[256px]"}
+                 className={"bg-neutral-700 border-0 pl-1 rounded w-[256px]"}
                  onChange={(e) => setTagSearch(e.target.value)}
                  value={tagSearch}
           />

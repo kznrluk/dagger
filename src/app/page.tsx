@@ -17,7 +17,7 @@ import {
 import {downloadAsZip} from "@/util/zip";
 import Split from "react-split";
 import CropViewArea from "@/app/component/crop";
-import {DropEvent, FileRejection, useDropzone} from "react-dropzone";
+import {useDropzone} from "react-dropzone";
 
 export default function Home() {
   const [projectImages, setProjectImages] = useState<DaggerImage[]>([])
@@ -313,7 +313,7 @@ export default function Home() {
   }
 
   async function handleFileSaveAsZip() {
-    await downloadAsZip(projectImages)
+    await downloadAsZip(selectedImages.length === 0 ? projectImages : selectedImages)
     setChanged(false)
   }
 
