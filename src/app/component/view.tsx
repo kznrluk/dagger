@@ -124,15 +124,11 @@ export function Promotion() {
       <div className="text-3xl font-bold animate-pulse text-center">Dagger️</div>
       <div>🗡️</div>
       <div className="text-xl">
-        <p>To get started, open an image and its corresponding caption file using the file icon. </p>
-        <p>The caption file should have the same name as the image.</p>
+        <p>Get started by importing your image and caption files.</p>
       </div>
       <div className="text-lg">
-        <p>Give us a star on GitHub!</p>
-        <a href="https://github.com/kznrluk/dagger" target="_blank" className="underline text-yellow-300 hover:text-yellow-500 transition duration-300 ease-in-out">kznrluk/dagger</a>
-      </div>
-      <div className="text-lg">
-        <p>We welcome your contributions and feedback. Please feel free to submit issues and pull requests on our GitHub repository.</p>
+        <p>Please see the <a className="underline" href="https://github.com/kznrluk/dagger">README</a> for detailed usage instructions.</p>
+        <p>We welcome your contributions and feedback. Please feel free to submit issues and pull requests on our <a className="underline" href="https://github.com/kznrluk/dagger">GitHub repository</a>.</p>
       </div>
       <div className="flex flex-col gap-2 text-center">
         <ShortcutIcon name="CTRL + Click" description="Select multiple" />
