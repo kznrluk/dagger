@@ -13,6 +13,9 @@ It is designed to be simple yet powerful, enabling you to organize your dataset 
 ## How to Use
 Dagger treats an image file and its caption file with the same name as a pair.
 
+![image](https://github.com/kznrluk/dagger/assets/29700428/94dad028-3f58-417f-87ea-2581f23347e0)
+
+
 ### 0. Preparations
 Dagger is compatible with the output files from WD14-Tagger. You can pre-tag your data if necessary.
 
